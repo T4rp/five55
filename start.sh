@@ -1,3 +1,3 @@
 #/bin/bash
 
-TOKEN="yuh" go run .
+TOKEN="yuh" TEST_GUILD="0" go run .

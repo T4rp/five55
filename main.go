@@ -14,6 +14,11 @@ func main() {
 		log.Fatal("No token provided")
 	}
 
+	test_guild := os.Getenv("TEST_GUILD")
+	if test_guild == "" {
+		log.Fatal("No test guild id provided")
+	}
+
 	session, err := discordgo.New("Bot " + token)
 	if err != nil {
 		log.Fatal(err)
@@ -24,7 +29,17 @@ func main() {
 			return
 		}
 
-		s.ChannelMessageSend(m.ChannelID, m.Content)
+		_, err = s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+			Content: m.Content,
+			Embeds: []*discordgo.MessageEmbed{{
+				Title:       "Rahh",
+				Description: "Rahhhhh",
+				Color:       0xaaff96,
+			}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
 	})
 
 	err = session.Open()
