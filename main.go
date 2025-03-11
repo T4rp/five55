@@ -1,11 +1,14 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/bwmarrin/discordgo"
+	"log"
+	"os"
 )
 
 func main() {
-	fmt.Println("yooo")
+	token := os.Getenv("TOKEN")
+
+	if token == "" {
+		log.Fatal("No token provided")
+	}
 }
