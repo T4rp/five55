@@ -77,7 +77,7 @@ func main() {
 		Description: "ARarararh",
 	})
 	if err != nil {
-		log.Println("Failed to create application command")
+		log.Println("Failed to create application command:", err)
 	}
 
 	err = session.Open()
