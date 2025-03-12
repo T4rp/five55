@@ -53,26 +53,10 @@ func main() {
 		}
 	})
 
-	session.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		if m.Author.Bot {
-			return
-		}
-
-		_, err := s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Content: m.Content,
-			Embeds: []*discordgo.MessageEmbed{{
-				Title:       "Rahh",
-				Description: "Rahhhhh",
-				Color:       0xaaff96,
-			}},
-		})
-		if err != nil {
-			log.Println(err)
-		}
-	})
-
 	session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		if i.ID == "info" {
+		command_name := i.Interaction.ApplicationCommandData().Name
+
+		if command_name == "info" {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
@@ -80,8 +64,12 @@ func main() {
 				},
 			})
 		} else {
-			log.Println("Cannot handle interaction with id: " + i.ID)
+			log.Println("Cannot handle interaction with id: " + command_name)
 		}
+	})
+
+	session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
+		log.Println("Logged in as " + r.User.Username)
 	})
 
 	_, err = session.ApplicationCommandCreate(app_id, test_guild, &discordgo.ApplicationCommand{
