@@ -8,11 +8,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-type BotContext struct {
-	application_id string
-	session        *discordgo.Session
-}
-
 func main() {
 	token := os.Getenv("TOKEN")
 
@@ -20,13 +15,13 @@ func main() {
 		log.Fatal("No token provided")
 	}
 
-	app_id := os.Getenv("APP_ID")
+	appId := os.Getenv("APP_ID")
 	if token == "" {
 		log.Fatal("No application id provided")
 	}
 
-	test_guild := os.Getenv("TEST_GUILD")
-	if test_guild == "" {
+	testGuild := os.Getenv("TEST_GUILD")
+	if testGuild == "" {
 		log.Fatal("No test guild id provided")
 	}
 
@@ -54,9 +49,9 @@ func main() {
 	})
 
 	session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		command_name := i.Interaction.ApplicationCommandData().Name
+		commandName := i.Interaction.ApplicationCommandData().Name
 
-		if command_name == "info" {
+		if commandName == "info" {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
@@ -64,7 +59,7 @@ func main() {
 				},
 			})
 		} else {
-			log.Println("Cannot handle interaction with id: " + command_name)
+			log.Println("Cannot handle interaction with id: " + commandName)
 		}
 	})
 
@@ -72,7 +67,7 @@ func main() {
 		log.Println("Logged in as " + r.User.Username)
 	})
 
-	_, err = session.ApplicationCommandCreate(app_id, test_guild, &discordgo.ApplicationCommand{
+	_, err = session.ApplicationCommandCreate(appId, testGuild, &discordgo.ApplicationCommand{
 		Name:        "info",
 		Description: "ARarararh",
 	})
