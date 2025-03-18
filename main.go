@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -30,24 +31,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	session.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		if m.Author.Bot {
-			return
-		}
-
-		_, err = s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Content: m.Content,
-			Embeds: []*discordgo.MessageEmbed{{
-				Title:       "Rahh",
-				Description: "Rahhhhh",
-				Color:       0xaaff96,
-			}},
-		})
-		if err != nil {
-			log.Println(err)
-		}
-	})
-
 	session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		commandName := i.Interaction.ApplicationCommandData().Name
 
@@ -55,7 +38,12 @@ func main() {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: "hello world",
+					Embeds: []*discordgo.MessageEmbed{{
+						Title: "five55 Bot",
+						Description: "Five55 is a bot that manages the five55 discord server.\n" +
+							"This bot is supposed to close the discord server channels at 5:55 PM EST",
+						Color: 0x990000,
+					}},
 				},
 			})
 		} else {
@@ -79,6 +67,18 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	go func() {
+		for {
+			currentTime := time.Now().UTC()
+			if currentTime.Hour() >= 21 && currentTime.Minute() >= 55 {
+				log.Println("Its time")
+			} else {
+				log.Println("Its not time", currentTime)
+			}
+			time.Sleep(10 * time.Second)
+		}
+	}()
 
 	stopSignal := make(chan os.Signal, 1)
 	signal.Notify(stopSignal, os.Interrupt)
