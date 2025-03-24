@@ -71,7 +71,8 @@ func main() {
 	go func() {
 		for {
 			currentTime := time.Now().UTC()
-			if currentTime.Hour() >= 21 && currentTime.Minute() >= 55 {
+			isValidTime := currentTime.Hour() >= 21 && currentTime.Minute() >= 55 && currentTime.Hour() < 23
+			if isValidTime {
 				log.Println("Its time")
 			} else {
 				log.Println("Its not time", currentTime)
