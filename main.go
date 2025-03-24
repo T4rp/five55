@@ -9,6 +9,26 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+const (
+	TOGGLE_CATAGORY = "0"
+	TOGGLE_ROLE     = "0"
+)
+
+func updateChannels(session *discordgo.Session) {
+	if isTime() {
+		session.ChannelPermissionSet(TOGGLE_CATAGORY, TOGGLE_ROLE, discordgo.PermissionOverwriteTypeRole, 1, 0)
+	} else {
+		session.ChannelPermissionSet(TOGGLE_CATAGORY, TOGGLE_ROLE, discordgo.PermissionOverwriteTypeRole, 0, 1)
+	}
+}
+
+func isTime() bool {
+	currentTime := time.Now().UTC()
+	isValidTime := currentTime.Hour() >= 21 && currentTime.Minute() >= 55 && currentTime.Hour() < 23
+
+	return isValidTime
+}
+
 func main() {
 	token := os.Getenv("TOKEN")
 
@@ -69,14 +89,16 @@ func main() {
 	}
 
 	go func() {
+		updateChannels(session)
+
+		lastState := isTime()
+
 		for {
-			currentTime := time.Now().UTC()
-			isValidTime := currentTime.Hour() >= 21 && currentTime.Minute() >= 55 && currentTime.Hour() < 23
-			if isValidTime {
-				log.Println("Its time")
-			} else {
-				log.Println("Its not time", currentTime)
+			newState := isTime()
+			if newState != lastState {
+				updateChannels(session)
 			}
+
 			time.Sleep(10 * time.Second)
 		}
 	}()
