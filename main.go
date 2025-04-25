@@ -10,23 +10,80 @@ import (
 )
 
 const (
-	TOGGLE_CATAGORY = "0"
-	TOGGLE_ROLE     = "0"
+	MAIN_CHANNEL         = "1349197130912235554"
+	TOGGLE_CATAGORY      = "1349197130912235552"
+	TOGGLE_ROLE          = "1349197130912235551"
+	CHATTING_PERIMSSIONS = discordgo.PermissionSendMessages |
+		discordgo.PermissionSendMessagesInThreads |
+		discordgo.PermissionAddReactions |
+		discordgo.PermissionVoiceConnect |
+		discordgo.PermissionVoiceSpeak |
+		discordgo.PermissionVoiceStreamVideo |
+		discordgo.PermissionUseActivities
 )
 
+const (
+	START_HOUR   = 12 + 5 + 4 // 5 pm EST
+	START_MINUTE = 55
+	END_HOUR     = 12 + 7 + 4 // 7 pm EST
+	END_MINUTE   = 55
+)
+
+func getChannelGlobalPermissions(session *discordgo.Session) (*discordgo.PermissionOverwrite, error) {
+	channel, err := session.Channel(MAIN_CHANNEL)
+	if err != nil {
+		return nil, err
+	}
+
+	permissions := channel.PermissionOverwrites
+
+	for _, perm := range permissions {
+		if perm.ID == TOGGLE_ROLE {
+			return perm, nil
+		}
+	}
+
+	return nil, nil
+}
+
 func updateChannels(session *discordgo.Session) {
+	perms, err := getChannelGlobalPermissions(session)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	if isTime() {
-		session.ChannelPermissionSet(TOGGLE_CATAGORY, TOGGLE_ROLE, discordgo.PermissionOverwriteTypeRole, 1, 0)
+		session.ChannelPermissionSet(
+			TOGGLE_CATAGORY,
+			TOGGLE_ROLE,
+			discordgo.PermissionOverwriteTypeRole,
+			perms.Allow|CHATTING_PERIMSSIONS,
+			perms.Deny&(^CHATTING_PERIMSSIONS),
+		)
+
+		session.ChannelMessageSend(MAIN_CHANNEL, "The server is open @evenyone")
 	} else {
-		session.ChannelPermissionSet(TOGGLE_CATAGORY, TOGGLE_ROLE, discordgo.PermissionOverwriteTypeRole, 0, 1)
+		session.ChannelPermissionSet(TOGGLE_CATAGORY,
+			TOGGLE_ROLE,
+			discordgo.PermissionOverwriteTypeRole,
+			perms.Allow&(^CHATTING_PERIMSSIONS),
+			perms.Deny|CHATTING_PERIMSSIONS,
+		)
+
+		session.ChannelMessageSend(MAIN_CHANNEL, "The server has been locked. Please wait until 5:55 PM EST to chat")
 	}
 }
 
 func isTime() bool {
 	currentTime := time.Now().UTC()
-	isValidTime := currentTime.Hour() >= 21 && currentTime.Minute() >= 55 && currentTime.Hour() < 23
 
-	return isValidTime
+	currentHour := currentTime.Hour()
+	currentMinute := currentTime.Minute()
+
+	isAfterStart := currentHour > START_HOUR || (currentHour == START_HOUR && currentMinute >= START_MINUTE)
+	isBeforeEnd := currentHour < END_HOUR || (currentHour == END_HOUR && currentMinute < END_MINUTE)
+
+	return isAfterStart && isBeforeEnd
 }
 
 func main() {
@@ -73,6 +130,7 @@ func main() {
 
 	session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Println("Logged in as " + r.User.Username)
+		s.ChannelMessageSend(MAIN_CHANNEL, "hello world")
 	})
 
 	_, err = session.ApplicationCommandCreate(appId, testGuild, &discordgo.ApplicationCommand{
