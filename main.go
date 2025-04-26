@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -10,7 +11,7 @@ import (
 )
 
 const (
-	MAIN_CHANNEL         = "1349197130912235554"
+	MAIN_CHANNEL         = "1365528971038560339"
 	TOGGLE_CATAGORY      = "1349197130912235552"
 	TOGGLE_ROLE          = "1349197130912235551"
 	CHATTING_PERIMSSIONS = discordgo.PermissionSendMessages |
@@ -60,8 +61,6 @@ func updateChannels(session *discordgo.Session) {
 			perms.Allow|CHATTING_PERIMSSIONS,
 			perms.Deny&(^CHATTING_PERIMSSIONS),
 		)
-
-		session.ChannelMessageSend(MAIN_CHANNEL, "The server is open @evenyone")
 	} else {
 		session.ChannelPermissionSet(TOGGLE_CATAGORY,
 			TOGGLE_ROLE,
@@ -69,9 +68,35 @@ func updateChannels(session *discordgo.Session) {
 			perms.Allow&(^CHATTING_PERIMSSIONS),
 			perms.Deny|CHATTING_PERIMSSIONS,
 		)
-
-		session.ChannelMessageSend(MAIN_CHANNEL, "The server has been locked. Please wait until 5:55 PM EST to chat")
 	}
+}
+
+func sendOpenMessage(session *discordgo.Session) {
+	timeNow := time.Now()
+	closeDate := time.Date(timeNow.Year(), timeNow.Month(), timeNow.Day(), END_HOUR, END_MINUTE, 0, 0, time.UTC)
+
+	session.ChannelMessageSendComplex(MAIN_CHANNEL, &discordgo.MessageSend{
+		Content: "@everyoe",
+		Embeds: []*discordgo.MessageEmbed{{
+			Title:       "Five55 is now open!",
+			Description: fmt.Sprintf("Five55 will remain open until <t:%d:t>.", closeDate.Unix()),
+			Color:       0xe5eb42,
+		}},
+	})
+}
+
+func sendCloseMessage(session *discordgo.Session) {
+	timeNow := time.Now()
+	openDate := time.Date(timeNow.Year(), timeNow.Month(), timeNow.Day(), START_HOUR, START_MINUTE, 0, 0, time.UTC)
+	openDate = openDate.Add(24 * time.Hour)
+
+	session.ChannelMessageSendComplex(MAIN_CHANNEL, &discordgo.MessageSend{
+		Embeds: []*discordgo.MessageEmbed{{
+			Title:       "Five55 is now closed",
+			Description: fmt.Sprintf("Five55 will open again on <t:%d:f>.", openDate.Unix()),
+			Color:       0x3348bd,
+		}},
+	})
 }
 
 func isTime() bool {
@@ -116,10 +141,9 @@ func main() {
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Embeds: []*discordgo.MessageEmbed{{
-						Title: "five55 Bot",
-						Description: "Five55 is a bot that manages the five55 discord server.\n" +
-							"This bot is supposed to close the discord server channels at 5:55 PM EST",
-						Color: 0x990000,
+						Title:       "Five55",
+						Description: "Five55 is a bot that manages the five55 discord server.",
+						Color:       0x990000,
 					}},
 				},
 			})
@@ -152,9 +176,16 @@ func main() {
 
 		for {
 			newState := isTime()
+
 			if newState != lastState {
 				lastState = newState
 				updateChannels(session)
+
+				if newState {
+					sendOpenMessage(session)
+				} else {
+					sendCloseMessage(session)
+				}
 			}
 
 			time.Sleep(10 * time.Second)
