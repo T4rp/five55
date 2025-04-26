@@ -130,7 +130,6 @@ func main() {
 
 	session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Println("Logged in as " + r.User.Username)
-		s.ChannelMessageSend(MAIN_CHANNEL, "hello world")
 	})
 
 	_, err = session.ApplicationCommandCreate(appId, testGuild, &discordgo.ApplicationCommand{
@@ -154,6 +153,7 @@ func main() {
 		for {
 			newState := isTime()
 			if newState != lastState {
+				lastState = newState
 				updateChannels(session)
 			}
 
