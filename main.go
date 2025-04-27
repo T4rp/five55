@@ -76,7 +76,7 @@ func sendOpenMessage(session *discordgo.Session) {
 	closeDate := time.Date(timeNow.Year(), timeNow.Month(), timeNow.Day(), END_HOUR, END_MINUTE, 0, 0, time.UTC)
 
 	session.ChannelMessageSendComplex(MAIN_CHANNEL, &discordgo.MessageSend{
-		Content: "@everyoe",
+		Content: "@everyone",
 		Embeds: []*discordgo.MessageEmbed{{
 			Title:       "Five55 is now open!",
 			Description: fmt.Sprintf("Five55 will remain open until <t:%d:t>.", closeDate.Unix()),
