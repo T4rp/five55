@@ -11,9 +11,6 @@ import (
 )
 
 const (
-	// MAIN_CHANNEL         = "1365528971038560339"
-	// TOGGLE_CATAGORY      = "1349197130912235552"
-	// TOGGLE_ROLE          = "1349197130912235551"
 	CHATTING_PERIMSSIONS = discordgo.PermissionSendMessages |
 		discordgo.PermissionSendMessagesInThreads |
 		discordgo.PermissionAddReactions |
@@ -55,16 +52,9 @@ func parseConfig() Config {
 	appId := assertEnv("APP_ID")
 	testGuild := assertEnv("TEST_GUILD")
 
-	// mainChannel := os.Getenv("MAIN_CHANNEL")
-	// toggleCatagory := os.Getenv("TOGGLE_CATAGORY")
-	// toggleRole := os.Getenv("TOGGLE_ROLE")
-
-	// assertString(&mainChannel)
-	// assertString(&toggleCatagory)
-	// assertString(&toggleRole)
-	mainChannel := "1365528971038560339"
-	toggleCatagory := "1349197130912235552"
-	toggleRole := "1349197130912235551"
+	mainChannel := assertEnv("MAIN_CHANNEL")
+	toggleCatagory := assertEnv("TOGGLE_CATAGORY")
+	toggleRole := assertEnv("TOGGLE_ROLE")
 
 	return Config{
 		token:          token,
