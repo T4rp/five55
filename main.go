@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	MAIN_CHANNEL         = "1365528971038560339"
-	TOGGLE_CATAGORY      = "1349197130912235552"
-	TOGGLE_ROLE          = "1349197130912235551"
+	// MAIN_CHANNEL         = "1365528971038560339"
+	// TOGGLE_CATAGORY      = "1349197130912235552"
+	// TOGGLE_ROLE          = "1349197130912235551"
 	CHATTING_PERIMSSIONS = discordgo.PermissionSendMessages |
 		discordgo.PermissionSendMessagesInThreads |
 		discordgo.PermissionAddReactions |
@@ -62,18 +62,22 @@ func parseConfig() Config {
 	// assertString(&mainChannel)
 	// assertString(&toggleCatagory)
 	// assertString(&toggleRole)
+	mainChannel := "1365528971038560339"
+	toggleCatagory := "1349197130912235552"
+	toggleRole := "1349197130912235551"
 
 	return Config{
-		token:     token,
-		appId:     appId,
-		testGuild: testGuild,
-		// mainChannel: mainChannel,
-		// toggleRole:  toggleRole,
+		token:          token,
+		appId:          appId,
+		testGuild:      testGuild,
+		mainChannel:    mainChannel,
+		toggleCatagory: toggleCatagory,
+		toggleRole:     toggleRole,
 	}
 }
 
-func getChannelGlobalPermissions(session *discordgo.Session) (*discordgo.PermissionOverwrite, error) {
-	channel, err := session.Channel(MAIN_CHANNEL)
+func getChannelRolePermissions(session *discordgo.Session, channelId string, roleId string) (*discordgo.PermissionOverwrite, error) {
+	channel, err := session.Channel(channelId)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +85,7 @@ func getChannelGlobalPermissions(session *discordgo.Session) (*discordgo.Permiss
 	permissions := channel.PermissionOverwrites
 
 	for _, perm := range permissions {
-		if perm.ID == TOGGLE_ROLE {
+		if perm.ID == roleId {
 			return perm, nil
 		}
 	}
@@ -89,23 +93,24 @@ func getChannelGlobalPermissions(session *discordgo.Session) (*discordgo.Permiss
 	return nil, nil
 }
 
-func updateChannels(session *discordgo.Session) {
-	perms, err := getChannelGlobalPermissions(session)
+func updateChannels(session *discordgo.Session, config *Config) {
+	perms, err := getChannelRolePermissions(session, config.toggleCatagory, config.toggleRole)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	if isTime() {
 		session.ChannelPermissionSet(
-			TOGGLE_CATAGORY,
-			TOGGLE_ROLE,
+			config.toggleCatagory,
+			config.toggleRole,
 			discordgo.PermissionOverwriteTypeRole,
 			perms.Allow|CHATTING_PERIMSSIONS,
 			perms.Deny&(^CHATTING_PERIMSSIONS),
 		)
 	} else {
-		session.ChannelPermissionSet(TOGGLE_CATAGORY,
-			TOGGLE_ROLE,
+		session.ChannelPermissionSet(
+			config.toggleCatagory,
+			config.toggleRole,
 			discordgo.PermissionOverwriteTypeRole,
 			perms.Allow&(^CHATTING_PERIMSSIONS),
 			perms.Deny|CHATTING_PERIMSSIONS,
@@ -113,11 +118,11 @@ func updateChannels(session *discordgo.Session) {
 	}
 }
 
-func sendOpenMessage(session *discordgo.Session) {
+func sendOpenMessage(session *discordgo.Session, config *Config) {
 	timeNow := time.Now()
 	closeDate := time.Date(timeNow.Year(), timeNow.Month(), timeNow.Day(), END_HOUR, END_MINUTE, 0, 0, time.UTC)
 
-	session.ChannelMessageSendComplex(MAIN_CHANNEL, &discordgo.MessageSend{
+	session.ChannelMessageSendComplex(config.mainChannel, &discordgo.MessageSend{
 		Content: "@everyone",
 		Embeds: []*discordgo.MessageEmbed{{
 			Title:       "Five55 is now open!",
@@ -127,12 +132,12 @@ func sendOpenMessage(session *discordgo.Session) {
 	})
 }
 
-func sendCloseMessage(session *discordgo.Session) {
+func sendCloseMessage(session *discordgo.Session, config *Config) {
 	timeNow := time.Now()
 	openDate := time.Date(timeNow.Year(), timeNow.Month(), timeNow.Day(), START_HOUR, START_MINUTE, 0, 0, time.UTC)
 	openDate = openDate.Add(24 * time.Hour)
 
-	session.ChannelMessageSendComplex(MAIN_CHANNEL, &discordgo.MessageSend{
+	session.ChannelMessageSendComplex(config.mainChannel, &discordgo.MessageSend{
 		Embeds: []*discordgo.MessageEmbed{{
 			Title:       "Five55 is now closed",
 			Description: fmt.Sprintf("Five55 will open again on <t:%d:f>.", openDate.Unix()),
@@ -202,7 +207,7 @@ func main() {
 	}
 
 	go func() {
-		updateChannels(session)
+		updateChannels(session, &config)
 
 		lastState := isTime()
 
@@ -211,12 +216,12 @@ func main() {
 
 			if newState != lastState {
 				lastState = newState
-				updateChannels(session)
+				updateChannels(session, &config)
 
 				if newState {
-					sendOpenMessage(session)
+					sendOpenMessage(session, &config)
 				} else {
-					sendCloseMessage(session)
+					sendCloseMessage(session, &config)
 				}
 			}
 
