@@ -30,6 +30,48 @@ const (
 	END_MINUTE   = 55
 )
 
+type Config struct {
+	token     string
+	appId     string
+	testGuild string
+
+	mainChannel    string
+	toggleCatagory string
+	toggleRole     string
+}
+
+func assertEnv(key string) string {
+	val := os.Getenv(key)
+
+	if val == "" {
+		log.Fatalf("%s not set", key)
+	}
+
+	return val
+}
+
+func parseConfig() Config {
+	token := assertEnv("TOKEN")
+	appId := assertEnv("APP_ID")
+	testGuild := assertEnv("TEST_GUILD")
+
+	// mainChannel := os.Getenv("MAIN_CHANNEL")
+	// toggleCatagory := os.Getenv("TOGGLE_CATAGORY")
+	// toggleRole := os.Getenv("TOGGLE_ROLE")
+
+	// assertString(&mainChannel)
+	// assertString(&toggleCatagory)
+	// assertString(&toggleRole)
+
+	return Config{
+		token:     token,
+		appId:     appId,
+		testGuild: testGuild,
+		// mainChannel: mainChannel,
+		// toggleRole:  toggleRole,
+	}
+}
+
 func getChannelGlobalPermissions(session *discordgo.Session) (*discordgo.PermissionOverwrite, error) {
 	channel, err := session.Channel(MAIN_CHANNEL)
 	if err != nil {
@@ -112,21 +154,11 @@ func isTime() bool {
 }
 
 func main() {
-	token := os.Getenv("TOKEN")
+	config := parseConfig()
 
-	if token == "" {
-		log.Fatal("No token provided")
-	}
-
-	appId := os.Getenv("APP_ID")
-	if token == "" {
-		log.Fatal("No application id provided")
-	}
-
-	testGuild := os.Getenv("TEST_GUILD")
-	if testGuild == "" {
-		log.Fatal("No test guild id provided")
-	}
+	token := config.token
+	appId := config.appId
+	testGuild := config.testGuild
 
 	session, err := discordgo.New("Bot " + token)
 	if err != nil {
