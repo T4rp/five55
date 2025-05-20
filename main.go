@@ -27,6 +27,8 @@ const (
 	END_MINUTE   = 55
 )
 
+var startTime time.Time
+
 type Config struct {
 	token     string
 	appId     string
@@ -149,6 +151,8 @@ func isTime() bool {
 }
 
 func main() {
+	startTime = time.Now()
+
 	config := parseConfig()
 
 	token := config.token
@@ -164,6 +168,8 @@ func main() {
 		commandName := i.Interaction.ApplicationCommandData().Name
 
 		if commandName == "info" {
+			uptime := time.Since(startTime)
+
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
@@ -171,6 +177,10 @@ func main() {
 						Title:       "Five55",
 						Description: "Five55 is a bot that manages the five55 discord server.",
 						Color:       0x990000,
+						Fields: []*discordgo.MessageEmbedField{{
+							Name:  "Uptime",
+							Value: uptime.Abs().String(),
+						}},
 					}},
 				},
 			})
